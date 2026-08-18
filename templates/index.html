@@ -1,826 +1,1014 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🌍 Disaster Relief Resource Scout</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet/dist/leaflet.css"/>
-<script src="https://cdn.jsdelivr.net/npm/leaflet/dist/leaflet.js"></script>
-<style>
-  /* ── DARK THEME (default) ── */
-  :root, [data-theme="dark"] {
-    --bg:        #0a0c10;
-    --surface:   #111318;
-    --surface2:  #1a1d24;
-    --border:    #2a2d35;
-    --red:       #ff2d2d;
-    --orange:    #ff7a00;
-    --green:     #00e676;
-    --yellow:    #ffd600;
-    --blue:      #2979ff;
-    --text:      #e8eaf0;
-    --muted:     #6b7280;
-    --font-head: 'Syne', sans-serif;
-    --font-mono: 'Space Mono', monospace;
-    --scanline-opacity: 0.015;
-    --toggle-bg: #1a1d24;
-    --toggle-border: #2a2d35;
-    --toggle-knob: #e8eaf0;
-    --shadow-color: rgba(0,0,0,0.4);
-  }
-
-  /* ── LIGHT THEME ── */
-  [data-theme="light"] {
-    --bg:        #f0f2f7;
-    --surface:   #ffffff;
-    --surface2:  #e8ebf2;
-    --border:    #d0d4e0;
-    --red:       #d42b2b;
-    --orange:    #d96800;
-    --green:     #00994d;
-    --yellow:    #c8a800;
-    --blue:      #1a5fd4;
-    --text:      #111318;
-    --muted:     #6b7280;
-    --scanline-opacity: 0;
-    --toggle-bg: #d0d4e0;
-    --toggle-border: #b0b8cc;
-    --toggle-knob: #111318;
-    --shadow-color: rgba(0,0,0,0.12);
-  }
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-mono);
-    min-height: 100vh;
-    overflow-x: hidden;
-    transition: background 0.3s ease, color 0.3s ease;
-  }
-
-  /* ── SCANLINE OVERLAY ── */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(255,255,255,var(--scanline-opacity)) 2px,
-      rgba(255,255,255,var(--scanline-opacity)) 4px
-    );
-    pointer-events: none;
-    z-index: 9999;
-    transition: opacity 0.3s ease;
-  }
-
-  /* ── HEADER ── */
-  header {
-    position: relative;
-    padding: 40px 40px 32px;
-    border-bottom: 1px solid var(--border);
-    overflow: hidden;
-    transition: border-color 0.3s ease;
-  }
-
-  header::before {
-    content: '';
-    position: absolute;
-    top: -80px; left: -80px;
-    width: 300px; height: 300px;
-    background: radial-gradient(circle, rgba(255,45,45,0.15), transparent 70%);
-    animation: pulse 4s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 0.6; }
-    50%       { transform: scale(1.2); opacity: 1; }
-  }
-
-  .header-inner {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 16px;
-    position: relative;
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-
-  .logo-icon {
-    width: 48px; height: 48px;
-    background: var(--red);
-    border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 24px;
-    box-shadow: 0 0 24px rgba(255,45,45,0.4);
-    animation: glow 2s ease-in-out infinite;
-  }
-
-  @keyframes glow {
-    0%, 100% { box-shadow: 0 0 24px rgba(255,45,45,0.4); }
-    50%       { box-shadow: 0 0 40px rgba(255,45,45,0.7); }
-  }
-
-  .logo h1 {
-    font-family: var(--font-head);
-    font-size: clamp(18px, 3vw, 26px);
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    line-height: 1.1;
-  }
-
-  .logo p {
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-top: 2px;
-  }
-
-  /* ── HEADER RIGHT: badge + toggle ── */
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-
-  .live-badge {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(255,45,45,0.1);
-    border: 1px solid rgba(255,45,45,0.3);
-    border-radius: 999px;
-    padding: 6px 14px;
-    font-size: 11px;
-    color: var(--red);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
-
-  .live-dot {
-    width: 8px; height: 8px;
-    background: var(--red);
-    border-radius: 50%;
-    animation: blink 1s step-end infinite;
-  }
-
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0; }
-  }
-
-  /* ── THEME TOGGLE ── */
-  .theme-toggle {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    user-select: none;
-    padding: 6px 12px;
-    background: var(--toggle-bg);
-    border: 1px solid var(--toggle-border);
-    border-radius: 999px;
-    transition: background 0.3s ease, border-color 0.3s ease;
-  }
-
-  .theme-toggle:hover {
-    border-color: var(--red);
-  }
-
-  .toggle-icon {
-    font-size: 14px;
-    line-height: 1;
-    transition: transform 0.4s ease;
-  }
-
-  .toggle-track {
-    width: 36px;
-    height: 20px;
-    background: var(--border);
-    border-radius: 999px;
-    position: relative;
-    transition: background 0.3s ease;
-  }
-
-  [data-theme="light"] .toggle-track {
-    background: var(--red);
-  }
-
-  .toggle-knob {
-    position: absolute;
-    top: 3px; left: 3px;
-    width: 14px; height: 14px;
-    background: var(--toggle-knob);
-    border-radius: 50%;
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-  }
-
-  [data-theme="light"] .toggle-knob {
-    transform: translateX(16px);
-  }
-
-  .toggle-label {
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    font-family: var(--font-mono);
-    min-width: 30px;
-    transition: color 0.3s ease;
-  }
-
-  /* ── MAIN LAYOUT ── */
-  main {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 32px 24px;
-  }
-
-  /* ── SEARCH BOX ── */
-  .search-section {
-    margin-bottom: 40px;
-  }
-
-  .search-label {
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    margin-bottom: 12px;
-  }
-
-  .search-box {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
-  .search-input {
-    flex: 1;
-    min-width: 240px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 20px;
-    color: var(--text);
-    font-family: var(--font-mono);
-    font-size: 14px;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s, background 0.3s, color 0.3s;
-  }
-
-  .search-input:focus {
-    border-color: var(--red);
-    box-shadow: 0 0 0 3px rgba(255,45,45,0.15);
-  }
-
-  .search-input::placeholder { color: var(--muted); }
-
-  .search-btn {
-    background: var(--red);
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    padding: 14px 28px;
-    font-family: var(--font-head);
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    cursor: pointer;
-    transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .search-btn:hover {
-    background: #ff4444;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(255,45,45,0.4);
-  }
-
-  .search-btn:active { transform: translateY(0); }
-
-  .search-btn.loading::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    animation: shimmer 1s infinite;
-  }
-
-  @keyframes shimmer {
-    0%   { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
-  }
-
-  /* ── QUICK CITY CHIPS ── */
-  .chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 12px;
-  }
-
-  .chip {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 5px 14px;
-    font-size: 12px;
-    color: var(--muted);
-    cursor: pointer;
-    transition: all 0.2s;
-    font-family: var(--font-mono);
-  }
-
-  .chip:hover {
-    border-color: var(--red);
-    color: var(--red);
-    background: rgba(255,45,45,0.08);
-  }
-
-  /* ── ERROR ── */
-  .error-bar {
-    background: rgba(255,45,45,0.1);
-    border: 1px solid rgba(255,45,45,0.3);
-    border-radius: 8px;
-    padding: 12px 18px;
-    color: var(--red);
-    font-size: 13px;
-    margin-bottom: 24px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  /* ── SECTION TITLE ── */
-  .section-title {
-    font-family: var(--font-head);
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--muted);
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .section-title::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  /* ── STATS ROW ── */
-  .stats-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 16px;
-    margin-bottom: 40px;
-  }
-
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    position: relative;
-    overflow: hidden;
-    animation: fadeUp 0.4s ease both;
-    transition: background 0.3s ease, border-color 0.3s ease;
-  }
-
-  .stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-  }
-
-  .stat-card.red::before   { background: var(--red); }
-  .stat-card.orange::before { background: var(--orange); }
-  .stat-card.green::before  { background: var(--green); }
-  .stat-card.blue::before   { background: var(--blue); }
-
-  .stat-label {
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-
-  .stat-value {
-    font-family: var(--font-head);
-    font-size: 32px;
-    font-weight: 800;
-    line-height: 1;
-  }
-
-  .stat-card.red   .stat-value { color: var(--red); }
-  .stat-card.orange .stat-value { color: var(--orange); }
-  .stat-card.green  .stat-value { color: var(--green); }
-  .stat-card.blue   .stat-value { color: var(--blue); }
-
-  /* ── GRID LAYOUT ── */
-  .grid-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    margin-bottom: 32px;
-  }
-
-  @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
-
-  /* ── NEWS CARDS ── */
-  .news-list { display: flex; flex-direction: column; gap: 8px; }
-
-  .news-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--blue);
-    border-radius: 8px;
-    padding: 12px 16px;
-    font-size: 12px;
-    line-height: 1.5;
-    transition: all 0.2s;
-    animation: fadeUp 0.4s ease both;
-    cursor: pointer;
-  }
-
-  .news-card:hover {
-    border-left-color: var(--red);
-    background: var(--surface2);
-    transform: translateX(4px);
-  }
-
-  .news-card a { color: var(--text); text-decoration: none; }
-  .news-card a:hover { color: var(--red); }
-
-  .ai-card {
-    border-left-color: var(--orange);
-    font-size: 11px;
-    color: var(--muted);
-  }
-
-  .ai-card:hover { border-left-color: var(--orange); color: var(--text); }
-
-  /* ── INCIDENT CARDS ── */
-  .incidents-list { display: flex; flex-direction: column; gap: 16px; }
-
-  .incident-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 20px;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.25s;
-    animation: fadeUp 0.5s ease both;
-    cursor: pointer;
-  }
-
-  .incident-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; bottom: 0;
-    width: 4px;
-    border-radius: 4px 0 0 4px;
-  }
-
-  .incident-card.urgency-5::before { background: var(--red); }
-  .incident-card.urgency-4::before { background: var(--orange); }
-  .incident-card.urgency-3::before { background: var(--yellow); }
-  .incident-card.urgency-2::before,
-  .incident-card.urgency-1::before { background: var(--green); }
-
-  .incident-card:hover {
-    border-color: rgba(255,45,45,0.4);
-    transform: translateY(-3px);
-    box-shadow: 0 12px 32px var(--shadow-color);
-  }
-
-  .incident-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 12px;
-  }
-
-  .incident-type {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
-
-  .type-rescue   { background: rgba(255,45,45,0.15);  color: var(--red); }
-  .type-medical  { background: rgba(41,121,255,0.15); color: var(--blue); }
-  .type-food     { background: rgba(255,122,0,0.15);  color: var(--orange); }
-  .type-shelter  { background: rgba(0,230,118,0.15);  color: var(--green); }
-  .type-water    { background: rgba(0,188,212,0.15);  color: #00bcd4; }
-  .type-other    { background: rgba(107,114,128,0.15); color: var(--muted); }
-
-  .urgency-badge {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .urgency-dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--border);
-  }
-
-  .urgency-dot.filled-5 { background: var(--red); }
-  .urgency-dot.filled-4 { background: var(--orange); }
-  .urgency-dot.filled-3 { background: var(--yellow); }
-  .urgency-dot.filled-2 { background: var(--green); }
-  .urgency-dot.filled-1 { background: var(--green); }
-
-  .incident-summary {
-    font-size: 13px;
-    line-height: 1.6;
-    margin-bottom: 14px;
-    color: var(--text);
-  }
-
-  .incident-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    font-size: 11px;
-    color: var(--muted);
-  }
-
-  .meta-item {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-
-  /* ── CONFIDENCE BAR ── */
-  .confidence-bar-wrap {
-    margin-top: 14px;
-    background: var(--surface2);
-    border-radius: 999px;
-    height: 4px;
-    overflow: hidden;
-  }
-
-  .confidence-bar {
-    height: 100%;
-    border-radius: 999px;
-    transition: width 1s ease;
-  }
-
-  /* ── MAP ── */
-  #map {
-    height: 420px;
-    border-radius: 14px;
-    border: 1px solid var(--border);
-    overflow: hidden;
-    margin-bottom: 32px;
-  }
-
-  /* ── FACT CHECK CARD ── */
-  .factcheck-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 28px;
-    margin-bottom: 32px;
-    animation: fadeUp 0.4s ease both;
-    transition: background 0.3s ease, border-color 0.3s ease;
-  }
-
-  .verdict {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 20px;
-    border-radius: 10px;
-    font-family: var(--font-head);
-    font-size: 18px;
-    font-weight: 800;
-    margin-top: 12px;
-  }
-
-  .verdict.true    { background: rgba(0,230,118,0.15); color: var(--green); border: 1px solid rgba(0,230,118,0.3); }
-  .verdict.false   { background: rgba(255,45,45,0.15);  color: var(--red);   border: 1px solid rgba(255,45,45,0.3); }
-  .verdict.unknown { background: rgba(255,214,0,0.15);  color: var(--yellow); border: 1px solid rgba(255,214,0,0.3); }
-
-  /* ── EMPTY STATE ── */
-  .empty {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--muted);
-    font-size: 13px;
-  }
-
-  .empty-icon { font-size: 36px; margin-bottom: 12px; }
-
-  /* ── LOADING OVERLAY ── */
-  #loading-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(10,12,16,0.85);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 20px;
-    backdrop-filter: blur(4px);
-  }
-
-  #loading-overlay.active { display: flex; }
-
-  .spinner {
-    width: 48px; height: 48px;
-    border: 3px solid var(--border);
-    border-top-color: var(--red);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .loading-text {
-    font-family: var(--font-head);
-    font-size: 14px;
-    color: var(--muted);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
-
-  .loading-steps {
-    font-size: 11px;
-    color: var(--muted);
-    text-align: center;
-    line-height: 2;
-  }
-
-  /* ── ANIMATIONS ── */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  /* ── SCROLLBAR ── */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
-
-  /* ── CITY HEADING ── */
-  .city-heading {
-    font-family: var(--font-head);
-    font-size: clamp(28px, 5vw, 48px);
-    font-weight: 800;
-    letter-spacing: -1px;
-    margin-bottom: 32px;
-    animation: fadeUp 0.3s ease both;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  .city-heading span { color: var(--red); }
-
-  /* source tags */
-  .source-tag {
-    display: inline-block;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 2px 6px;
-    font-size: 9px;
-    letter-spacing: 1px;
-    color: var(--muted);
-    text-transform: uppercase;
-  }
-
-  /* ── LIGHT MODE ADJUSTMENTS ── */
-  [data-theme="light"] header::before {
-    background: radial-gradient(circle, rgba(212,43,43,0.08), transparent 70%);
-  }
-
-  [data-theme="light"] #loading-overlay {
-    background: rgba(240,242,247,0.9);
-  }
-
-  @media (max-width: 500px) {
-    .live-badge { display: none; }
-    .header-right { gap: 8px; }
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>� OceanShield AI – Ocean Hazard Monitoring</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet/dist/leaflet.css" />
+  <script src="https://cdn.jsdelivr.net/npm/leaflet/dist/leaflet.js"></script>
+  <style>
+    /* ── DARK THEME (default) ── */
+    :root,
+    [data-theme="dark"] {
+      --bg: #0a0c10;
+      --surface: #111318;
+      --surface2: #1a1d24;
+      --border: #2a2d35;
+      --red: #ff2d2d;
+      --orange: #ff7a00;
+      --green: #00e676;
+      --yellow: #ffd600;
+      --blue: #2979ff;
+      --text: #e8eaf0;
+      --muted: #6b7280;
+      --font-head: 'Syne', sans-serif;
+      --font-mono: 'Space Mono', monospace;
+      --scanline-opacity: 0.015;
+      --toggle-bg: #1a1d24;
+      --toggle-border: #2a2d35;
+      --toggle-knob: #e8eaf0;
+      --shadow-color: rgba(0, 0, 0, 0.4);
+    }
+
+    /* ── LIGHT THEME ── */
+    [data-theme="light"] {
+      --bg: #f0f2f7;
+      --surface: #ffffff;
+      --surface2: #e8ebf2;
+      --border: #d0d4e0;
+      --red: #d42b2b;
+      --orange: #d96800;
+      --green: #00994d;
+      --yellow: #c8a800;
+      --blue: #1a5fd4;
+      --text: #111318;
+      --muted: #6b7280;
+      --scanline-opacity: 0;
+      --toggle-bg: #d0d4e0;
+      --toggle-border: #b0b8cc;
+      --toggle-knob: #111318;
+      --shadow-color: rgba(0, 0, 0, 0.12);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-mono);
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    /* ── SCANLINE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg,
+          transparent,
+          transparent 2px,
+          rgba(255, 255, 255, var(--scanline-opacity)) 2px,
+          rgba(255, 255, 255, var(--scanline-opacity)) 4px);
+      pointer-events: none;
+      z-index: 9999;
+      transition: opacity 0.3s ease;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: relative;
+      padding: 40px 40px 32px;
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+      transition: border-color 0.3s ease;
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      top: -80px;
+      left: -80px;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(255, 45, 45, 0.15), transparent 70%);
+      animation: pulse 4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 0.6;
+      }
+
+      50% {
+        transform: scale(1.2);
+        opacity: 1;
+      }
+    }
+
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      position: relative;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--red);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 0 24px rgba(255, 45, 45, 0.4);
+      animation: glow 2s ease-in-out infinite;
+    }
+
+    @keyframes glow {
+
+      0%,
+      100% {
+        box-shadow: 0 0 24px rgba(255, 45, 45, 0.4);
+      }
+
+      50% {
+        box-shadow: 0 0 40px rgba(255, 45, 45, 0.7);
+      }
+    }
+
+    .logo h1 {
+      font-family: var(--font-head);
+      font-size: clamp(18px, 3vw, 26px);
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+    }
+
+    .logo p {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    /* ── HEADER RIGHT: badge + toggle ── */
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 45, 45, 0.1);
+      border: 1px solid rgba(255, 45, 45, 0.3);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 11px;
+      color: var(--red);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--red);
+      border-radius: 50%;
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0;
+      }
+    }
+
+    /* ── THEME TOGGLE ── */
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+      padding: 6px 12px;
+      background: var(--toggle-bg);
+      border: 1px solid var(--toggle-border);
+      border-radius: 999px;
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+
+    .theme-toggle:hover {
+      border-color: var(--red);
+    }
+
+    .toggle-icon {
+      font-size: 14px;
+      line-height: 1;
+      transition: transform 0.4s ease;
+    }
+
+    .toggle-track {
+      width: 36px;
+      height: 20px;
+      background: var(--border);
+      border-radius: 999px;
+      position: relative;
+      transition: background 0.3s ease;
+    }
+
+    [data-theme="light"] .toggle-track {
+      background: var(--red);
+    }
+
+    .toggle-knob {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 14px;
+      height: 14px;
+      background: var(--toggle-knob);
+      border-radius: 50%;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    [data-theme="light"] .toggle-knob {
+      transform: translateX(16px);
+    }
+
+    .toggle-label {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      font-family: var(--font-mono);
+      min-width: 30px;
+      transition: color 0.3s ease;
+    }
+
+    /* ── MAIN LAYOUT ── */
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    /* ── SEARCH BOX ── */
+    .search-section {
+      margin-bottom: 40px;
+    }
+
+    .search-label {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      flex: 1;
+      min-width: 240px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 20px;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.3s, color 0.3s;
+    }
+
+    .search-input:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(255, 45, 45, 0.15);
+    }
+
+    .search-input::placeholder {
+      color: var(--muted);
+    }
+
+    .search-btn {
+      background: var(--red);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 28px;
+      font-family: var(--font-head);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .search-btn:hover {
+      background: #ff4444;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(255, 45, 45, 0.4);
+    }
+
+    .search-btn:active {
+      transform: translateY(0);
+    }
+
+    .search-btn.loading::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      animation: shimmer 1s infinite;
+    }
+
+    @keyframes shimmer {
+      0% {
+        transform: translateX(-100%);
+      }
+
+      100% {
+        transform: translateX(100%);
+      }
+    }
+
+    /* ── QUICK CITY CHIPS ── */
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .chip {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 14px;
+      font-size: 12px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: var(--font-mono);
+    }
+
+    .chip:hover {
+      border-color: var(--red);
+      color: var(--red);
+      background: rgba(255, 45, 45, 0.08);
+    }
+
+    /* ── ERROR ── */
+    .error-bar {
+      background: rgba(255, 45, 45, 0.1);
+      border: 1px solid rgba(255, 45, 45, 0.3);
+      border-radius: 8px;
+      padding: 12px 18px;
+      color: var(--red);
+      font-size: 13px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* ── SECTION TITLE ── */
+    .section-title {
+      font-family: var(--font-head);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── STATS ROW ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      animation: fadeUp 0.4s ease both;
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+    }
+
+    .stat-card.red::before {
+      background: var(--red);
+    }
+
+    .stat-card.orange::before {
+      background: var(--orange);
+    }
+
+    .stat-card.green::before {
+      background: var(--green);
+    }
+
+    .stat-card.blue::before {
+      background: var(--blue);
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-family: var(--font-head);
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .stat-card.red .stat-value {
+      color: var(--red);
+    }
+
+    .stat-card.orange .stat-value {
+      color: var(--orange);
+    }
+
+    .stat-card.green .stat-value {
+      color: var(--green);
+    }
+
+    .stat-card.blue .stat-value {
+      color: var(--blue);
+    }
+
+    /* ── GRID LAYOUT ── */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    @media (max-width: 768px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ── NEWS CARDS ── */
+    .news-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .news-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--blue);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 12px;
+      line-height: 1.5;
+      transition: all 0.2s;
+      animation: fadeUp 0.4s ease both;
+      cursor: pointer;
+    }
+
+    .news-card:hover {
+      border-left-color: var(--red);
+      background: var(--surface2);
+      transform: translateX(4px);
+    }
+
+    .news-card a {
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .news-card a:hover {
+      color: var(--red);
+    }
+
+    .ai-card {
+      border-left-color: var(--orange);
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .ai-card:hover {
+      border-left-color: var(--orange);
+      color: var(--text);
+    }
+
+    /* ── INCIDENT CARDS ── */
+    .incidents-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .incident-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s;
+      animation: fadeUp 0.5s ease both;
+      cursor: pointer;
+    }
+
+    .incident-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 4px;
+      border-radius: 4px 0 0 4px;
+    }
+
+    .incident-card.urgency-5::before {
+      background: var(--red);
+    }
+
+    .incident-card.urgency-4::before {
+      background: var(--orange);
+    }
+
+    .incident-card.urgency-3::before {
+      background: var(--yellow);
+    }
+
+    .incident-card.urgency-2::before,
+    .incident-card.urgency-1::before {
+      background: var(--green);
+    }
+
+    .incident-card:hover {
+      border-color: rgba(255, 45, 45, 0.4);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px var(--shadow-color);
+    }
+
+    .incident-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .incident-type {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .type-rescue {
+      background: rgba(255, 45, 45, 0.15);
+      color: var(--red);
+    }
+
+    .type-medical {
+      background: rgba(41, 121, 255, 0.15);
+      color: var(--blue);
+    }
+
+    .type-food {
+      background: rgba(255, 122, 0, 0.15);
+      color: var(--orange);
+    }
+
+    .type-shelter {
+      background: rgba(0, 230, 118, 0.15);
+      color: var(--green);
+    }
+
+    .type-water {
+      background: rgba(0, 188, 212, 0.15);
+      color: #00bcd4;
+    }
+
+    .type-other {
+      background: rgba(107, 114, 128, 0.15);
+      color: var(--muted);
+    }
+
+    .urgency-badge {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .urgency-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+
+    .urgency-dot.filled-5 {
+      background: var(--red);
+    }
+
+    .urgency-dot.filled-4 {
+      background: var(--orange);
+    }
+
+    .urgency-dot.filled-3 {
+      background: var(--yellow);
+    }
+
+    .urgency-dot.filled-2 {
+      background: var(--green);
+    }
+
+    .urgency-dot.filled-1 {
+      background: var(--green);
+    }
+
+    .incident-summary {
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 14px;
+      color: var(--text);
+    }
+
+    .incident-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* ── CONFIDENCE BAR ── */
+    .confidence-bar-wrap {
+      margin-top: 14px;
+      background: var(--surface2);
+      border-radius: 999px;
+      height: 4px;
+      overflow: hidden;
+    }
+
+    .confidence-bar {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 1s ease;
+    }
+
+    /* ── MAP ── */
+    #map {
+      height: 420px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      margin-bottom: 32px;
+    }
+
+    /* ── FACT CHECK CARD ── */
+    .factcheck-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      margin-bottom: 32px;
+      animation: fadeUp 0.4s ease both;
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+
+    .verdict {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-family: var(--font-head);
+      font-size: 18px;
+      font-weight: 800;
+      margin-top: 12px;
+    }
+
+    .verdict.true {
+      background: rgba(0, 230, 118, 0.15);
+      color: var(--green);
+      border: 1px solid rgba(0, 230, 118, 0.3);
+    }
+
+    .verdict.false {
+      background: rgba(255, 45, 45, 0.15);
+      color: var(--red);
+      border: 1px solid rgba(255, 45, 45, 0.3);
+    }
+
+    .verdict.unknown {
+      background: rgba(255, 214, 0, 0.15);
+      color: var(--yellow);
+      border: 1px solid rgba(255, 214, 0, 0.3);
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .empty-icon {
+      font-size: 36px;
+      margin-bottom: 12px;
+    }
+
+    /* ── LOADING OVERLAY ── */
+    #loading-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 12, 16, 0.85);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 20px;
+      backdrop-filter: blur(4px);
+    }
+
+    #loading-overlay.active {
+      display: flex;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--border);
+      border-top-color: var(--red);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .loading-text {
+      font-family: var(--font-head);
+      font-size: 14px;
+      color: var(--muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .loading-steps {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 2;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--muted);
+    }
+
+    /* ── CITY HEADING ── */
+    .city-heading {
+      font-family: var(--font-head);
+      font-size: clamp(28px, 5vw, 48px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 32px;
+      animation: fadeUp 0.3s ease both;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .city-heading span {
+      color: var(--red);
+    }
+
+    /* source tags */
+    .source-tag {
+      display: inline-block;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 9px;
+      letter-spacing: 1px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    /* ── LIGHT MODE ADJUSTMENTS ── */
+    [data-theme="light"] header::before {
+      background: radial-gradient(circle, rgba(212, 43, 43, 0.08), transparent 70%);
+    }
+
+    [data-theme="light"] #loading-overlay {
+      background: rgba(240, 242, 247, 0.9);
+    }
+
+    @media (max-width: 500px) {
+      .live-badge {
+        display: none;
+      }
+
+      .header-right {
+        gap: 8px;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<!-- LOADING OVERLAY -->
-<div id="loading-overlay">
-  <div class="spinner"></div>
-  <div class="loading-text">Scanning for disasters</div>
-  <div class="loading-steps" id="loading-steps">
-    ⬛ Fetching real news signals...<br>
-    ⬛ Running AI analysis...<br>
-    ⬛ Deduplicating reports...<br>
-    ⬛ Scoring confidence...
-  </div>
-</div>
-
-<!-- HEADER -->
-<header>
-  <div class="header-inner">
-    <div class="logo">
-      <div class="logo-icon">🌍</div>
-      <div>
-        <h1>Disaster Relief Resource Scout</h1>
-        <p>From chaos → AI → Action</p>
-      </div>
+  <!-- LOADING OVERLAY -->
+  <div id="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Scanning for disasters</div>
+    <div class="loading-steps" id="loading-steps">
+      ⬛ Fetching real news signals...<br>
+      ⬛ Running AI analysis...<br>
+      ⬛ Deduplicating reports...<br>
+      ⬛ Scoring confidence...
     </div>
-    <div class="header-right">
-      <div class="live-badge">
-        <div class="live-dot"></div>
-        Live Monitoring
-      </div>
+  </div>
 
-      <!-- THEME TOGGLE -->
-      <div class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode" role="button" tabindex="0" aria-label="Toggle theme">
-        <span class="toggle-icon" id="toggle-icon">🌙</span>
-        <div class="toggle-track">
-          <div class="toggle-knob"></div>
+  <!-- HEADER -->
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">🌍</div>
+        <div>
+          <h1>OceanShield AI</h1>
+          <p>Crowdsourced Ocean Hazard Monitoring</p>
         </div>
-        <span class="toggle-label" id="toggle-label">DARK</span>
+      </div>
+      <div class="header-right">
+        <div class="live-badge">
+          <div class="live-dot"></div>
+          Live Monitoring
+        </div>
+
+        <!-- THEME TOGGLE -->
+        <div class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode" role="button"
+          tabindex="0" aria-label="Toggle theme">
+          <span class="toggle-icon" id="toggle-icon">🌙</span>
+          <div class="toggle-track">
+            <div class="toggle-knob"></div>
+          </div>
+          <span class="toggle-label" id="toggle-label">DARK</span>
+        </div>
       </div>
     </div>
-  </div>
-</header>
+  </header>
 
-<main>
+  <main>
 
-  <!-- SEARCH -->
-  <div class="search-section">
-    <div class="search-label">// Enter city name or paste news URL to fact-check</div>
-    <form method="post" id="search-form">
-      <div class="search-box">
-        <input
-          class="search-input"
-          type="text"
-          name="city_or_url"
-          id="search-input"
-          placeholder="e.g. Mumbai, Delhi, Chennai..."
-          value="{{ city_or_url or '' }}"
-          autocomplete="off"
-          required
-        >
-        <button class="search-btn" type="submit" id="search-btn">
-          ⚡ Analyze
-        </button>
+    <!-- SEARCH -->
+    <div class="search-section">
+      <div class="search-label">// Enter coastal city or paste ocean news to monitor hazards</div>
+      <form method="post" id="search-form">
+        <div class="search-box">
+          <input class="search-input" type="text" name="city_or_url" id="search-input"
+            placeholder="e.g. Mumbai, Chennai, Goa..." value="{{ city_or_url or '' }}" autocomplete="off" required>
+          <button class="search-btn" type="submit" id="search-btn">
+            ⚡ Analyze
+          </button>
+        </div>
+      </form>
+      <div class="chips">
+        <span class="chip" onclick="setCity('Mumbai')">Mumbai</span>
+        <span class="chip" onclick="setCity('Delhi')">Delhi</span>
+        <span class="chip" onclick="setCity('Chennai')">Chennai</span>
+        <span class="chip" onclick="setCity('Bangalore')">Bangalore</span>
+        <span class="chip" onclick="setCity('Kolkata')">Kolkata</span>
+        <span class="chip" onclick="setCity('Hyderabad')">Hyderabad</span>
+        <span class="chip" onclick="setCity('Pune')">Pune</span>
       </div>
-    </form>
-    <div class="chips">
-      <span class="chip" onclick="setCity('Mumbai')">Mumbai</span>
-      <span class="chip" onclick="setCity('Delhi')">Delhi</span>
-      <span class="chip" onclick="setCity('Chennai')">Chennai</span>
-      <span class="chip" onclick="setCity('Bangalore')">Bangalore</span>
-      <span class="chip" onclick="setCity('Kolkata')">Kolkata</span>
-      <span class="chip" onclick="setCity('Hyderabad')">Hyderabad</span>
-      <span class="chip" onclick="setCity('Pune')">Pune</span>
     </div>
-  </div>
 
-  {% if error %}
-  <div class="error-bar">⚠️ {{ error }}</div>
-  {% endif %}
+    {% if error %}
+    <div class="error-bar">⚠️ {{ error }}</div>
+    {% endif %}
 
-  {% if city_or_url %}
+    {% if city_or_url %}
 
     <!-- CITY HEADING -->
     {% if not news_analysis %}
@@ -855,11 +1043,11 @@
       <div class="section-title">🔎 Fact Check Result</div>
       <div style="font-size:13px; color:var(--muted); margin-bottom:8px;">{{ news_analysis.title }}</div>
       {% if news_analysis.status == 'true' %}
-        <div class="verdict true">✅ TRUE — This article appears credible</div>
+      <div class="verdict true">✅ TRUE — This article appears credible</div>
       {% elif news_analysis.status == 'false' %}
-        <div class="verdict false">❌ FALSE — This article appears to be misinformation</div>
+      <div class="verdict false">❌ FALSE — This article appears to be misinformation</div>
       {% else %}
-        <div class="verdict unknown">⚠️ UNKNOWN — Could not determine credibility</div>
+      <div class="verdict unknown">⚠️ UNKNOWN — Could not determine credibility</div>
       {% endif %}
     </div>
 
@@ -873,16 +1061,16 @@
         <div class="section-title">📰 Real News Signals</div>
         <div class="news-list">
           {% if real_news %}
-            {% for n in real_news %}
-            <div class="news-card" style="animation-delay: {{ loop.index0 * 0.05 }}s">
-              <a href="{{ n.link }}" target="_blank">{{ n.title }}</a>
-            </div>
-            {% endfor %}
+          {% for n in real_news %}
+          <div class="news-card" style="animation-delay: {{ loop.index0 * 0.05 }}s">
+            <a href="{{ n.link }}" target="_blank">{{ n.title }}</a>
+          </div>
+          {% endfor %}
           {% else %}
-            <div class="empty">
-              <div class="empty-icon">📭</div>
-              No real news found for this city.
-            </div>
+          <div class="empty">
+            <div class="empty-icon">📭</div>
+            No real news found for this city.
+          </div>
           {% endif %}
         </div>
       </div>
@@ -892,16 +1080,16 @@
         <div class="section-title">🤖 AI-Generated Reports</div>
         <div class="news-list">
           {% if ai_reports %}
-            {% for report in ai_reports %}
-            <div class="news-card ai-card" style="animation-delay: {{ loop.index0 * 0.05 }}s">
-              {{ report }}
-            </div>
-            {% endfor %}
+          {% for report in ai_reports %}
+          <div class="news-card ai-card" style="animation-delay: {{ loop.index0 * 0.05 }}s">
+            {{ report }}
+          </div>
+          {% endfor %}
           {% else %}
-            <div class="empty">
-              <div class="empty-icon">🤖</div>
-              No AI reports generated.
-            </div>
+          <div class="empty">
+            <div class="empty-icon">🤖</div>
+            No AI reports generated.
+          </div>
           {% endif %}
         </div>
       </div>
@@ -918,95 +1106,95 @@
     <div class="section-title">🚨 Verified Actionable Incidents</div>
     <div class="incidents-list">
       {% if incidents %}
-        {% for inc in incidents %}
-        <div class="incident-card urgency-{{ inc.urgency }}" style="animation-delay: {{ loop.index0 * 0.08 }}s">
-          <div class="incident-header">
-            <div>
-              {% set type_class = 'type-' + inc.need_type %}
-              <span class="incident-type {{ type_class }}">
-                {% if inc.need_type == 'rescue' %}🆘
-                {% elif inc.need_type == 'medical' %}🏥
-                {% elif inc.need_type == 'food' %}🍱
-                {% elif inc.need_type == 'shelter' %}🏠
-                {% elif inc.need_type == 'water' %}💧
-                {% else %}📋{% endif %}
-                {{ inc.need_type | upper }}
-              </span>
-            </div>
-            <div class="urgency-badge" title="Urgency {{ inc.urgency }}/5">
-              {% for i in range(1, 6) %}
-                <div class="urgency-dot {% if i <= inc.urgency %}filled-{{ inc.urgency }}{% endif %}"></div>
-              {% endfor %}
-            </div>
+      {% for inc in incidents %}
+      <div class="incident-card urgency-{{ inc.urgency }}" style="animation-delay: {{ loop.index0 * 0.08 }}s">
+        <div class="incident-header">
+          <div>
+            {% set type_class = 'type-' + inc.need_type %}
+            <span class="incident-type {{ type_class }}">
+              {% if inc.need_type == 'rescue' %}🆘
+              {% elif inc.need_type == 'medical' %}🏥
+              {% elif inc.need_type == 'food' %}🍱
+              {% elif inc.need_type == 'shelter' %}🏠
+              {% elif inc.need_type == 'water' %}💧
+              {% else %}📋{% endif %}
+              {{ inc.need_type | upper }}
+            </span>
           </div>
-
-          {% if inc.location %}
-          <div style="font-size:11px; color:var(--muted); margin-bottom:8px;">
-            📍 {{ inc.location }}
-          </div>
-          {% endif %}
-
-          <div class="incident-summary">{{ inc.summary }}</div>
-
-          <div class="incident-meta">
-            <div class="meta-item">
-              📊 {{ inc.report_count }} report{{ 's' if inc.report_count > 1 }}
-            </div>
-            <div class="meta-item">
-              🎯 {{ "%.0f"|format(inc.confidence_score * 100) }}% confidence
-            </div>
-            {% for src in inc.sources | unique %}
-            <span class="source-tag">{{ src }}</span>
+          <div class="urgency-badge" title="Urgency {{ inc.urgency }}/5">
+            {% for i in range(1, 6) %}
+            <div class="urgency-dot {% if i <= inc.urgency %}filled-{{ inc.urgency }}{% endif %}"></div>
             {% endfor %}
           </div>
+        </div>
 
-          <!-- Confidence Bar -->
-          <div class="confidence-bar-wrap">
-            <div class="confidence-bar" style="
+        {% if inc.location %}
+        <div style="font-size:11px; color:var(--muted); margin-bottom:8px;">
+          📍 {{ inc.location }}
+        </div>
+        {% endif %}
+
+        <div class="incident-summary">{{ inc.summary }}</div>
+
+        <div class="incident-meta">
+          <div class="meta-item">
+            📊 {{ inc.report_count }} report{{ 's' if inc.report_count > 1 }}
+          </div>
+          <div class="meta-item">
+            🎯 {{ "%.0f"|format(inc.confidence_score * 100) }}% confidence
+          </div>
+          {% for src in inc.sources | unique %}
+          <span class="source-tag">{{ src }}</span>
+          {% endfor %}
+        </div>
+
+        <!-- Confidence Bar -->
+        <div class="confidence-bar-wrap">
+          <div class="confidence-bar" style="
               width: {{ (inc.confidence_score * 100) | int }}%;
               background: {% if inc.confidence_score > 0.7 %}var(--green)
                           {% elif inc.confidence_score > 0.4 %}var(--yellow)
                           {% else %}var(--red){% endif %};
             "></div>
-          </div>
         </div>
-        {% endfor %}
+      </div>
+      {% endfor %}
       {% else %}
-        <div class="empty">
-          <div class="empty-icon">✅</div>
-          No actionable incidents found for this city.
-        </div>
+      <div class="empty">
+        <div class="empty-icon">✅</div>
+        No actionable incidents found for this city.
+      </div>
       {% endif %}
     </div>
 
     {% endif %}
-  {% endif %}
+    {% endif %}
 
-</main>
+  </main>
 
-<!-- MAP SCRIPT -->
-{% if lat and lon %}
-<script>
-  var map = L.map('map', { zoomControl: true }).setView([{{ lat }}, {{ lon }}], 12);
+  <!-- MAP SCRIPT -->
+  {% if lat and lon %}
+  <script>
+    var map = L.map('map', { zoomControl: true }).setView([{{ lat }}, { { lon } }], 12);
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '© OpenStreetMap © CARTO',
-    subdomains: 'abcd',
-    maxZoom: 19
-  }).addTo(map);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '© OpenStreetMap © CARTO',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(map);
 
-  var cityIcon = L.divIcon({
-    html: '<div style="background:#ff2d2d;width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 12px rgba(255,45,45,0.8)"></div>',
-    iconSize: [14, 14],
-    className: ''
-  });
+    var cityIcon = L.divIcon({
+      html: '<div style="background:#ff2d2d;width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 12px rgba(255,45,45,0.8)"></div>',
+      iconSize: [14, 14],
+      className: ''
+    });
 
-  L.marker([{{ lat }}, {{ lon }}], { icon: cityIcon })
-    .addTo(map)
-    .bindPopup('<b style="color:#ff2d2d">{{ city_or_url }}</b>')
-    .openPopup();
+    L.marker([{{ lat }}, {{ lon }}], { icon: cityIcon })
+      .addTo(map)
+      .bindPopup('<b style="color:#ff2d2d">{{ city_or_url }}</b>')
+      .openPopup();
 
-  {% for inc in incidents %}
+    {% for inc in incidents %}
     {% if inc.location %}
     var incIcon{{ loop.index }} = L.divIcon({
       html: '<div style="background:{% if inc.urgency >= 4 %}#ff2d2d{% elif inc.urgency == 3 %}#ffd600{% else %}#00e676{% endif %};width:10px;height:10px;border-radius:50%;border:2px solid rgba(255,255,255,0.5);box-shadow:0 0 8px rgba(0,0,0,0.5)"></div>',
@@ -1022,85 +1210,86 @@
         '<small>Urgency: {{ inc.urgency }}/5</small>'
       );
     {% endif %}
-  {% endfor %}
-</script>
-{% endif %}
+    {% endfor %}
+  </script>
+  {% endif %}
 
-<!-- THEME + SEARCH SCRIPTS -->
-<script>
-  // ── THEME TOGGLE ──
-  var STORAGE_KEY = 'drrs-theme';
+  <!-- THEME + SEARCH SCRIPTS -->
+  <script>
+    // ── THEME TOGGLE ──
+    var STORAGE_KEY = 'drrs-theme';
 
-  function applyTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
-    var icon  = document.getElementById('toggle-icon');
-    var label = document.getElementById('toggle-label');
-    if (theme === 'light') {
-      icon.textContent  = '☀️';
-      label.textContent = 'LIGHT';
-    } else {
-      icon.textContent  = '🌙';
-      label.textContent = 'DARK';
-    }
-    try { localStorage.setItem(STORAGE_KEY, theme); } catch(e) {}
-  }
-
-  function toggleTheme() {
-    var current = document.documentElement.getAttribute('data-theme') || 'dark';
-    applyTheme(current === 'dark' ? 'light' : 'dark');
-  }
-
-  // Keyboard accessibility
-  document.getElementById('theme-toggle').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleTheme(); }
-  });
-
-  // Restore saved preference on load
-  (function() {
-    var saved = null;
-    try { saved = localStorage.getItem(STORAGE_KEY); } catch(e) {}
-    if (saved === 'light' || saved === 'dark') applyTheme(saved);
-  })();
-
-  // ── SEARCH LOADING ──
-  function setCity(city) {
-    document.getElementById('search-input').value = city;
-    document.getElementById('search-form').submit();
-  }
-
-  document.getElementById('search-form').addEventListener('submit', function() {
-    var overlay = document.getElementById('loading-overlay');
-    var btn     = document.getElementById('search-btn');
-    var steps   = document.getElementById('loading-steps');
-
-    overlay.classList.add('active');
-    btn.classList.add('loading');
-    btn.textContent = '⏳ Analyzing...';
-
-    var messages = [
-      '🔴 Fetching real news signals...',
-      '🔴 Running AI analysis...',
-      '🔴 Deduplicating reports...',
-      '🔴 Scoring confidence...'
-    ];
-
-    var i = 0;
-    var interval = setInterval(function() {
-      if (i < messages.length) {
-        var html = '';
-        for (var j = 0; j < messages.length; j++) {
-          if (j < i)       html += '✅ ' + messages[j].slice(3) + '<br>';
-          else if (j == i) html += messages[j] + '<br>';
-          else             html += '⬛ ' + messages[j].slice(3) + '<br>';
-        }
-        steps.innerHTML = html;
-        i++;
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      var icon = document.getElementById('toggle-icon');
+      var label = document.getElementById('toggle-label');
+      if (theme === 'light') {
+        icon.textContent = '☀️';
+        label.textContent = 'LIGHT';
       } else {
-        clearInterval(interval);
+        icon.textContent = '🌙';
+        label.textContent = 'DARK';
       }
-    }, 1200);
-  });
-</script>
+      try { localStorage.setItem(STORAGE_KEY, theme); } catch (e) { }
+    }
+
+    function toggleTheme() {
+      var current = document.documentElement.getAttribute('data-theme') || 'dark';
+      applyTheme(current === 'dark' ? 'light' : 'dark');
+    }
+
+    // Keyboard accessibility
+    document.getElementById('theme-toggle').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleTheme(); }
+    });
+
+    // Restore saved preference on load
+    (function () {
+      var saved = null;
+      try { saved = localStorage.getItem(STORAGE_KEY); } catch (e) { }
+      if (saved === 'light' || saved === 'dark') applyTheme(saved);
+    })();
+
+    // ── SEARCH LOADING ──
+    function setCity(city) {
+      document.getElementById('search-input').value = city;
+      document.getElementById('search-form').submit();
+    }
+
+    document.getElementById('search-form').addEventListener('submit', function () {
+      var overlay = document.getElementById('loading-overlay');
+      var btn = document.getElementById('search-btn');
+      var steps = document.getElementById('loading-steps');
+
+      overlay.classList.add('active');
+      btn.classList.add('loading');
+      btn.textContent = '⏳ Analyzing...';
+
+      var messages = [
+        '🔴 Fetching real news signals...',
+        '🔴 Running AI analysis...',
+        '🔴 Deduplicating reports...',
+        '🔴 Scoring confidence...'
+      ];
+
+      var i = 0;
+      var interval = setInterval(function () {
+        if (i < messages.length) {
+          var html = '';
+          for (var j = 0; j < messages.length; j++) {
+            if (j < i) html += '✅ ' + messages[j].slice(3) + '<br>';
+            else if (j == i) html += messages[j] + '<br>';
+            else html += '⬛ ' + messages[j].slice(3) + '<br>';
+          }
+          steps.innerHTML = html;
+          i++;
+        } else {
+          clearInterval(interval);
+        }
+      }, 1200);
+    });
+  </script>
 
 </body>
+
 </html>

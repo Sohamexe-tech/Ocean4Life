@@ -1,0 +1,154 @@
+{
+    "metadata": {
+        "project": "OceanShield AI",
+        "type": "DEMO_DATA",
+        "warning": "This is DEMO DATA for testing and demonstration purposes only. Do not treat as real-time ocean hazard information.",
+        "generated": "2026-01-15T10:30:00Z",
+        "disclaimer": "All incidents in this file are synthetic examples created for testing the OceanShield AI system."
+    },
+    "demo_incidents": [
+        {
+            "incident_id": "DEMO_INC_001",
+            "hazard_type": "COASTAL_FLOODING",
+            "severity": "HIGH",
+            "location": "Mumbai Coast, India",
+            "latitude": 19.0760,
+            "longitude": 72.8777,
+            "timestamp": "2026-01-15T09:45:00Z",
+            "summary": "DEMO: High tide combined with heavy rainfall causing coastal flooding in Worli and Colaba areas",
+            "description": "Demonstration incident - Heavy monsoon rains combined with high tide have led to water logging in coastal Mumbai",
+            "report_count": 3,
+            "sources": [
+                "social_media",
+                "news",
+                "citizen_report"
+            ],
+            "ai_confidence": 0.87,
+            "confidence_score": 0.85,
+            "status": "PENDING",
+            "evidence": [
+                "flooding",
+                "water level",
+                "coastal",
+                "high tide"
+            ],
+            "is_demo": true
+        },
+        {
+            "incident_id": "DEMO_INC_002",
+            "hazard_type": "STORM_SURGE",
+            "severity": "CRITICAL",
+            "location": "Chennai Coast, India",
+            "latitude": 13.0827,
+            "longitude": 80.2707,
+            "timestamp": "2026-01-15T08:20:00Z",
+            "summary": "DEMO: Pre-monsoon storm surge warning along Tamil Nadu coast",
+            "description": "Demonstration incident - Severe storm system approaching Chennai, expected to cause 2-3m storm surge",
+            "report_count": 5,
+            "sources": [
+                "news",
+                "weather_alert",
+                "social_media",
+                "official_alert",
+                "news"
+            ],
+            "ai_confidence": 0.92,
+            "confidence_score": 0.91,
+            "status": "PENDING",
+            "evidence": [
+                "storm surge",
+                "cyclone",
+                "high waves",
+                "weather alert"
+            ],
+            "is_demo": true
+        },
+        {
+            "incident_id": "DEMO_INC_003",
+            "hazard_type": "HIGH_WAVES",
+            "severity": "MODERATE",
+            "location": "Goa Coast, India",
+            "latitude": 15.3017,
+            "longitude": 73.8207,
+            "timestamp": "2026-01-15T07:15:00Z",
+            "summary": "DEMO: Rough sea conditions advisory for Goa beaches",
+            "description": "Demonstration incident - Strong westerly winds generating 2.5-3.5m waves, swimming advisory in effect",
+            "report_count": 2,
+            "sources": [
+                "official_alert",
+                "social_media"
+            ],
+            "ai_confidence": 0.78,
+            "confidence_score": 0.72,
+            "status": "PENDING",
+            "evidence": [
+                "high waves",
+                "rough seas",
+                "winds",
+                "swimming advisory"
+            ],
+            "is_demo": true
+        },
+        {
+            "incident_id": "DEMO_INC_004",
+            "hazard_type": "COASTAL_EROSION",
+            "severity": "MODERATE",
+            "location": "Thiruvananthapuram, Kerala, India",
+            "latitude": 8.5241,
+            "longitude": 76.9366,
+            "timestamp": "2026-01-14T16:45:00Z",
+            "summary": "DEMO: Accelerated coastal erosion threatening settlements",
+            "description": "Demonstration incident - Increased wave action causing erosion, multiple structures at risk",
+            "report_count": 2,
+            "sources": [
+                "news",
+                "citizen_report"
+            ],
+            "ai_confidence": 0.68,
+            "confidence_score": 0.65,
+            "status": "PENDING",
+            "evidence": [
+                "erosion",
+                "land loss",
+                "coastal",
+                "structures"
+            ],
+            "is_demo": true
+        },
+        {
+            "incident_id": "DEMO_INC_005",
+            "hazard_type": "MARINE_POLLUTION",
+            "severity": "HIGH",
+            "location": "Thane Creek, Mumbai, India",
+            "latitude": 19.1865,
+            "longitude": 72.9579,
+            "timestamp": "2026-01-15T06:00:00Z",
+            "summary": "DEMO: Marine pollution alert - Chemical discharge in coastal waters",
+            "description": "Demonstration incident - Industrial discharge detected affecting marine life in creek ecosystem",
+            "report_count": 3,
+            "sources": [
+                "environmental_alert",
+                "news",
+                "citizen_report"
+            ],
+            "ai_confidence": 0.84,
+            "confidence_score": 0.82,
+            "status": "PENDING",
+            "evidence": [
+                "pollution",
+                "contamination",
+                "chemical",
+                "industrial"
+            ],
+            "is_demo": true
+        }
+    ],
+    "usage_instructions": [
+        "This file contains DEMO DATA only",
+        "Used for testing OceanShield AI system functionality",
+        "All locations and incidents are synthetic examples",
+        "Do not rely on this data for real hazard assessment",
+        "Load this data using: python -c \"import json; data = json.load(open('data/demo_ocean_incidents.json'))\"",
+        "To replace with real data: replace the 'demo_incidents' array with actual incident data"
+    ]
+}
