@@ -1,0 +1,224 @@
+{
+  "incidents": [
+    {
+      "incident_id": "OS-INC-C68698",
+      "hazard_type": "COASTAL_FLOODING",
+      "location": "Marine Drive, Mumbai, India",
+      "latitude": 19.076,
+      "longitude": 72.8777,
+      "severity": "PENDING",
+      "ai_credibility_score": 71,
+      "credibility_level": "HIGH",
+      "report_count": 1,
+      "report_ids": [
+        "OS-RPT-10CC00"
+      ],
+      "reports": [
+        {
+          "report_id": "OS-RPT-10CC00",
+          "description": "Water is flooding the coastal areas of Marine Drive in Mumbai. \n    The situation is worsening with high tides and storms. \n    Multiple residential buildings are affected. \n    Roads are completely submerged with water level rising.",
+          "location": "Marine Drive, Mumbai, India",
+          "latitude": 19.076,
+          "longitude": 72.8777,
+          "location_type": "USER_PROVIDED",
+          "timestamp": "2026-08-18T21:40:24.249649",
+          "source": "citizen_report",
+          "reporter_name": "Rajesh Kumar",
+          "raw_hazard_type": "COASTAL_FLOODING",
+          "hazard_type": "COASTAL_FLOODING",
+          "hazard_confidence": 0.6,
+          "status": "CLASSIFIED",
+          "error_message": null,
+          "is_demo": false
+        }
+      ],
+      "evidence": [
+        "the",
+        "Water",
+        "flooding",
+        "is",
+        "coastal"
+      ],
+      "severity_evidence": [],
+      "credibility_factors": {
+        "source_reliability": 65,
+        "cross_source_agreement": 55,
+        "report_count_corroboration": 60,
+        "evidence_strength": 83,
+        "location_consistency": 90,
+        "extraction_confidence": 60,
+        "temporal_consistency": 80,
+        "semantic_similarity": 65
+      },
+      "status": "PENDING",
+      "created_at": "2026-08-18T21:40:24.890359",
+      "last_updated": "2026-08-18T21:40:24.890384",
+      "is_demo": false
+    },
+    {
+      "incident_id": "OS-INC-600B69",
+      "hazard_type": "COASTAL_FLOODING",
+      "location": "Marina Beach, Chennai, India",
+      "latitude": 13.049,
+      "longitude": 80.2828,
+      "severity": "PENDING",
+      "ai_credibility_score": 71,
+      "credibility_level": "HIGH",
+      "report_count": 1,
+      "report_ids": [
+        "OS-RPT-8FF421"
+      ],
+      "reports": [
+        {
+          "report_id": "OS-RPT-8FF421",
+          "description": "Severe storm surge observed at Marina Beach Chennai. \n    Waves are crashing over the seawall. \n    Water is entering coastal businesses and shops. \n    Multiple boats damaged, fishing community affected.",
+          "location": "Marina Beach, Chennai, India",
+          "latitude": 13.049,
+          "longitude": 80.2828,
+          "location_type": "USER_PROVIDED",
+          "timestamp": "2026-08-18T21:40:24.384793",
+          "source": "citizen_report",
+          "reporter_name": "Priya Sharma",
+          "raw_hazard_type": "COASTAL_FLOODING",
+          "hazard_type": "COASTAL_FLOODING",
+          "hazard_confidence": 0.6,
+          "status": "CLASSIFIED",
+          "error_message": null,
+          "is_demo": false
+        }
+      ],
+      "evidence": [
+        "observed",
+        "Severe",
+        "surge",
+        "at",
+        "storm"
+      ],
+      "severity_evidence": [],
+      "credibility_factors": {
+        "source_reliability": 65,
+        "cross_source_agreement": 55,
+        "report_count_corroboration": 60,
+        "evidence_strength": 83,
+        "location_consistency": 90,
+        "extraction_confidence": 60,
+        "temporal_consistency": 80,
+        "semantic_similarity": 65
+      },
+      "status": "PENDING",
+      "created_at": "2026-08-18T21:40:24.890696",
+      "last_updated": "2026-08-18T21:40:24.890709",
+      "is_demo": false
+    },
+    {
+      "incident_id": "OS-INC-080D1B",
+      "hazard_type": "COASTAL_FLOODING",
+      "location": "Baga Beach, Goa, India",
+      "latitude": 15.5859,
+      "longitude": 73.7364,
+      "severity": "PENDING",
+      "ai_credibility_score": 68,
+      "credibility_level": "HIGH",
+      "report_count": 1,
+      "report_ids": [
+        "OS-RPT-8D7E75"
+      ],
+      "reports": [
+        {
+          "report_id": "OS-RPT-8D7E75",
+          "description": "Unusually high waves hitting Baga Beach in Goa. \n    Water level significantly higher than normal. \n    Swimmers warned to stay out of water. \n    Beach resorts evacuating guests to higher grounds.",
+          "location": "Baga Beach, Goa, India",
+          "latitude": 15.5859,
+          "longitude": 73.7364,
+          "location_type": "USER_PROVIDED",
+          "timestamp": "2026-08-18T21:40:24.508592",
+          "source": "citizen_report",
+          "reporter_name": "Amit Patel",
+          "raw_hazard_type": "COASTAL_FLOODING",
+          "hazard_type": "COASTAL_FLOODING",
+          "hazard_confidence": 0.6,
+          "status": "CLASSIFIED",
+          "error_message": null,
+          "is_demo": false
+        }
+      ],
+      "evidence": [
+        "high",
+        "Baga",
+        "hitting",
+        "waves",
+        "Unusually"
+      ],
+      "severity_evidence": [],
+      "credibility_factors": {
+        "source_reliability": 65,
+        "cross_source_agreement": 55,
+        "report_count_corroboration": 60,
+        "evidence_strength": 69,
+        "location_consistency": 90,
+        "extraction_confidence": 60,
+        "temporal_consistency": 80,
+        "semantic_similarity": 65
+      },
+      "status": "PENDING",
+      "created_at": "2026-08-18T21:40:24.890880",
+      "last_updated": "2026-08-18T21:40:24.890887",
+      "is_demo": false
+    },
+    {
+      "incident_id": "OS-INC-6B655C",
+      "hazard_type": "COASTAL_FLOODING",
+      "location": "Thane, Maharashtra, India",
+      "latitude": 19.2183,
+      "longitude": 72.9781,
+      "severity": "PENDING",
+      "ai_credibility_score": 68,
+      "credibility_level": "HIGH",
+      "report_count": 1,
+      "report_ids": [
+        "OS-RPT-D4375F"
+      ],
+      "reports": [
+        {
+          "report_id": "OS-RPT-D4375F",
+          "description": "Dark oily slick observed floating near the coast.\n    Strong petroleum smell in the air.\n    Fish population showing signs of distress.\n    Birds affected by the oil coating on water.",
+          "location": "Thane, Maharashtra, India",
+          "latitude": 19.2183,
+          "longitude": 72.9781,
+          "location_type": "USER_PROVIDED",
+          "timestamp": "2026-08-18T21:40:24.592916",
+          "source": "citizen_report",
+          "reporter_name": "Sarah Mendes",
+          "raw_hazard_type": "COASTAL_FLOODING",
+          "hazard_type": "COASTAL_FLOODING",
+          "hazard_confidence": 0.6,
+          "status": "CLASSIFIED",
+          "error_message": null,
+          "is_demo": false
+        }
+      ],
+      "evidence": [
+        "observed",
+        "floating",
+        "Dark",
+        "slick",
+        "oily"
+      ],
+      "severity_evidence": [],
+      "credibility_factors": {
+        "source_reliability": 65,
+        "cross_source_agreement": 55,
+        "report_count_corroboration": 60,
+        "evidence_strength": 69,
+        "location_consistency": 90,
+        "extraction_confidence": 60,
+        "temporal_consistency": 80,
+        "semantic_similarity": 65
+      },
+      "status": "PENDING",
+      "created_at": "2026-08-18T21:40:24.891003",
+      "last_updated": "2026-08-18T21:40:24.891009",
+      "is_demo": false
+    }
+  ]
+}
