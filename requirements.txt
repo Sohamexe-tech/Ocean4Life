@@ -1,0 +1,11 @@
+flask
+groq
+python-dotenv
+requests
+beautifulsoup4
+geopy
+pydantic
+numpy
+scipy
+scikit-learn
+lxml
